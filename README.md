@@ -13,7 +13,13 @@ A python script that can help make a very specific type of collages
 
 
 ![Image-2](https://github.com/masterelf425900/Tiles-Tapestry/blob/main/Images/Image-2.png)
-![Animals collage for kids](https://github.com/masterelf425900/Tiles-Tapestry/blob/main/Images/Animals collage for kids.jpg)
+
+Final Output with more changes, refining and cropping.
+
+![Animals collage for kids](https://github.com/masterelf425900/Tiles-Tapestry/blob/main/Images/Animals%20collage%20for%20kids.jpg)
+(i made this animal collage for my little niece. to teacher her what certain animals are called and look like) 
+
+
 
 ## How to Install
 1. Download the collage.py
