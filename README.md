@@ -14,7 +14,7 @@ A python script that can help make a very specific type of collages
 - lock individual images to prevent auto layout
 
 ## Note
-Some fo the functionalities are quite barebones like zooming which feels really quite sluggish but they do "work".
+Some of the functionalities are quite barebones like zooming which feels really quite sluggish but they do "work".
 
 ![Showcase.png](https://github.com/masterelf425900/Tiles-Tapestry/blob/main/Images/Showcase.png)
 
