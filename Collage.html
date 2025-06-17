@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collage Creator</title>
+    <style>
+        /* ======================================
+        CSS VARIABLES
+        =======================================
+        */
+        :root {
+            --color-page-background: #E0E0E0;
+            --color-app-background: #C1D9F4;
+            --color-content-background: #ccd9eb; /* Background outside of collage */
+            --color-button: #0c8ce9;
+            --color-section-header: #6C92F6;
+            --color-text-dark: #000000;
+            --color-text-light: #000000;
+            --color-border: #000000;
+            --color-input-background: #ccd9eb;
+            --color-highlight: #dc5697;
+            --color-dialog-background: #a6bfde;
+            
+            /* New color variables for specific buttons */
+            --color-remove-x: #df4570;
+            --color-add-square: #4ee9c5;
+            --color-template-minimize: #4ec0e9;
+            --color-apply: #5677FD;
+
+            --border-size-thick: 3px;
+            --border-size-medium: 2px;
+
+            --corner-radius: 0px;
+        }
+        
+        /* ======================================
+        GLOBAL & RESET STYLES
+        =======================================
+        */
+        * {
+             box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--color-page-background);
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            margin: 0;
+            padding: 8px;
+            color: var(--color-text-dark);
+            overflow: hidden;
+        }
+
+        /* ======================================
+        MAIN LAYOUT CONTAINERS
+        =======================================
+        */
+        .app-container {
+            display: flex;
+            border: var(--border-size-thick) solid var(--color-border);
+            height: calc(100vh - 16px);
+            background-color: var(--color-app-background);
+        }
+
+        .left-panel {
+            width: 250px;
+            min-width: 200px;
+            border-right: var(--border-size-thick) solid var(--color-border);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .middle-panel {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel {
+            width: 346px;
+            min-width: 220px;
+            border-left: var(--border-size-thick) solid var(--color-border);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        /* ======================================
+        LEFT PANEL - LIST ITEMS
+        =======================================
+        */
+        .list-item {
+            padding-bottom: 10px;
+            border-bottom: var(--border-size-medium) solid var(--color-border);
+            cursor: pointer;
+            padding: 8px;
+            border: var(--border-size-medium) solid transparent;
+        }
+        .list-item:hover {
+            background-color: #ffffff44;
+        }
+        .list-item.selected {
+            border-color: var(--color-highlight);
+            background-color: #ffffff66;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item-title {
+            font-weight: bold;
+            word-break: break-all;
+        }
+
+        /* ======================================
+        MIDDLE PANEL - TOOLBAR & CONTENT
+        =======================================
+        */
+        .toolbar {
+            display: flex;
+            padding: 5px;
+            border-bottom: var(--border-size-thick) solid var(--color-border);
+            align-items: center;
+            gap: 5px;
+        }
+
+        .content-area {
+            flex-grow: 1;
+            background-color: var(--color-content-background); /* Background outside of collage */
+            margin: 10px;
+            border: var(--border-size-thick) solid var(--color-border);
+            border-radius: var(--corner-radius);
+            position: relative;
+            overflow: hidden;
+        }
+        #preview-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: grab;
+        }
+        #preview-canvas:active {
+            cursor: grabbing;
+        }
+
+        /* ======================================
+        RIGHT PANEL - SECTIONS & CONTROLS
+        =======================================
+        */
+        .section-title {
+            background-color: var(--color-section-header);
+            color: var(--color-text-light);
+            padding: 5px;
+            text-align: center;
+            border: var(--border-size-medium) solid var(--color-border);
+            border-radius: var(--corner-radius);
+            font-weight: bold;
+        }
+
+        .control-group {
+            border: var(--border-size-medium) solid var(--color-border);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-radius: var(--corner-radius);
+            margin-top: -1px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        
+        .control-row > .text-input,
+        .control-row > .select-input {
+            flex: 1; /* Makes inputs in a row share space equally */
+        }
+
+
+        .control-label {
+            width: 28px;
+            height: 28px;
+            background-color: var(--color-button);
+            border: var(--border-size-medium) solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: var(--corner-radius);
+            flex-shrink: 0;
+        }
+
+        #img-locked { /* Targeting the specific select-input by its ID */
+            flex: 0.75; /* fixing misalignment between C and L input fields */
+        }
+        
+        /* ======================================
+        BUTTONS
+        =======================================
+        */
+        .btn {
+            background-color: var(--color-button);
+            border: var(--border-size-medium) solid var(--color-border);
+            font-weight: bold;
+            padding: 5px 10px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 0;
+            border-radius: var(--corner-radius);
+            color: var(--color-text-dark);
+            text-align: center;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 30px;
+        }
+
+        .btn-main-action {
+            background-color: var(--color-apply);
+            color: var(--color-text-light);
+            width: 100%;
+        }
+        .btn:active {
+            filter: brightness(0.9);
+        }
+
+        .btn-remove { background-color: var(--color-remove-x); }
+        .btn-add { background-color: var(--color-add-square); }
+        .btn-template { background-color: var(--color-template-minimize); }
+
+        /* ======================================
+        INPUTS & SELECTS
+        =======================================
+        */
+        .text-input {
+            width: 100%;
+            border: var(--border-size-medium) solid var(--color-border);
+            background-color: var(--color-input-background);
+            padding: 3px;
+            text-align: center;
+            border-radius: var(--corner-radius);
+            color: var(--color-text-dark);
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            height: 30px;
+        }
+        
+        .color-input { font-weight: bold; }
+
+        .select-input {
+            flex: 1;
+            min-width: 0;
+            border: var(--border-size-medium) solid var(--color-border);
+            background-color: var(--color-input-background); /* Changed background color */
+            padding: 3px;
+            font-weight: bold;
+            border-radius: var(--corner-radius);
+            color: var(--color-text-dark);
+            text-align: center;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 10px;
+            padding-right: 30px;
+            height: 30px;
+        }
+
+        /* ======================================
+        WINDOW CONTROLS
+        =======================================
+        */
+        .window-controls {
+            margin-left: auto;
+            display: flex;
+        }
+        .window-control {
+            width: 30px;
+            height: 30px;
+            border: var(--border-size-medium) solid var(--color-border);
+            margin-left: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            background-color: var(--color-button);
+            border-radius: var(--corner-radius);
+        }
+        .window-control-minimize { background-color: var(--color-template-minimize); }
+        .window-control-maximize { background-color: var(--color-add-square); }
+        .window-control-close { background-color: var(--color-remove-x); }
+
+        /* ======================================
+        MODAL STYLES (for Template Manager)
+        =======================================
+        */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--color-dialog-background); /* Changed background */
+    margin: auto;
+    padding: 15px;
+    border: var(--border-size-thick) solid var(--color-border);
+    width: 300px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+    animation-name: animatetop;
+    animation-duration: 0.4s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-radius: var(--corner-radius);
+    position: relative; /* Add relative positioning for close button placement */
+}
+
+/* The Close Button - positioned in top right corner */
+.close-button {
+    position: absolute;
+    top: -2px; /* Position inside the modal content */
+    right: -2px; /* Position inside the modal content */
+    width: 30px;
+    height: 31px;
+    font-size: 18px;
+    border: var(--border-size-medium) solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    background-color: var(--color-remove-x);
+    border-radius: var(--corner-radius);
+    cursor: pointer; /* Add cursor pointer for better UX */
+    z-index: 1001; /* Ensure it's above the modal content */
+}
+
+        .close-button:hover,
+        .close-button:focus {
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-header {
+            position: relative;
+            text-align: center;
+            background-color: var(--color-section-header);
+            color: var(--color-text-light);
+            padding: 5px;
+            border: var(--border-size-medium) solid var(--color-border);
+            border-radius: var(--corner-radius);
+            font-weight: bold;
+        }
+
+        .modal-body {
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-row .control-label {
+             width: 28px;
+             height: 28px;
+             background-color: var(--color-button);
+             border: var(--border-size-medium) solid var(--color-border);
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             font-weight: bold;
+             border-radius: var(--corner-radius);
+             flex-shrink: 0;
+        }
+
+        .modal .text-input {
+            width: 100%;
+            border: var(--border-size-medium) solid var(--color-border);
+            background-color: var(--color-input-background);
+            padding: 3px;
+            text-align: center;
+            border-radius: var(--corner-radius);
+            color: var(--color-text-dark);
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            height: 30px;
+        }
+        .modal .select-input {
+            background-color: var(--color-input-background);
+        }
+
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .modal .btn {
+            background-color: var(--color-button);
+            border: var(--border-size-medium) solid var(--color-border);
+            font-weight: bold;
+            padding: 5px 10px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 0;
+            border-radius: var(--corner-radius);
+            color: var(--color-text-dark);
+            text-align: center;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 30px;
+        }
+        .modal .btn-add { background-color: var(--color-add-square); }
+        .modal .btn-remove { background-color: var(--color-remove-x); }
+
+        /* Animation for modal */
+        @keyframes animatetop {
+            from {top: -300px; opacity: 0}
+            to {top: 0; opacity: 1}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="left-panel" id="image-list-panel">
+            </div>
+
+        <div class="middle-panel">
+            <div class="toolbar">
+                <button class="btn" id="btn-refresh">Refresh</button>
+                <button class="btn" id="btn-zoom-out">Zoom-Out</button>
+                <button class="btn" id="btn-zoom-in">Zoom-in</button>
+                <input type="text" class="text-input" id="input-zoom-level" value="100%" style="width: 60px;height: 30px; font-weight: bold; flex-grow: 0;">
+                <button class="btn" id="btn-fit">Fit</button>
+                <div class="window-controls">
+                    <div class="window-control window-control-minimize">—</div>
+                    <div class="window-control window-control-maximize">⧠</div>
+                    <div class="window-control window-control-close">X</div>
+                </div>
+            </div>
+            <div class="content-area" id="content-area">
+                <canvas id="preview-canvas"></canvas>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="section">
+                <div class="section-title">Canvas Settings</div>
+                <div class="control-group">
+                    <div class="control-row">
+                        <div class="control-label">W</div>
+                        <input type="text" class="text-input" id="canvas-width" value="1920">
+                        <div class="control-label">H</div>
+                        <input type="text" class="text-input" id="canvas-height" value="1080">
+                    </div>
+                    <div class="control-row">
+                        <div class="control-label">B</div>
+                        <input type="text" class="text-input" id="canvas-border" value="10">
+                        <div class="control-label">S</div>
+                        <input type="text" class="text-input" id="canvas-scale" value="1">
+                    </div>
+                    <div class="control-row">
+                        <div class="control-label" style="width: auto; padding: 0 10px;">Color</div>
+                        <input type="text" class="text-input color-input" id="canvas-bgcolor" value="#000000">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Image Properties</div>
+                <div class="control-group">
+                     <div class="control-row">
+                        <div class="control-label">W</div>
+                        <input type="text" class="text-input" id="img-width">
+                        <div class="control-label">H</div>
+                        <input type="text" class="text-input" id="img-height">
+                    </div>
+                     <div class="control-row">
+                        <div class="control-label">X</div>
+                        <input type="text" class="text-input" id="img-x">
+                        <div class="control-label">Y</div>
+                        <input type="text" class="text-input" id="img-y">
+                    </div>
+                     <div class="control-row">
+                        <div class="control-label">C</div>
+                        <input type="text" class="text-input" id="img-corners">
+                        <div class="control-label">L</div>
+                        <select class="select-input" id="img-locked">
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+                    <div class="control-row">
+                       <button class="btn btn-add" id="btn-add">Add</button>
+                       <button class="btn btn-remove" id="btn-remove">Remove</button>
+                    </div>
+                     <div class="control-row">
+                       <button class="btn btn-template" id="btn-template-manager" style="flex: 1.1;">Template</button>
+                       <select class="select-input" id="template-select">
+                           <option>Select...</option>
+                       </select>
+                    </div>
+                    <div class="control-row">
+                       <button class="btn btn-main-action" id="btn-apply">Apply</button>
+                    </div>
+                </div>
+            </div>
+           
+            <div class="section">
+                 <div class="section-title">File Actions</div>
+                 <div class="control-group">
+                      <div class="control-row">
+                       <button class="btn" id="btn-save">Save</button>
+                    </div>
+                     <div class="control-row">
+                       <button class="btn" id="btn-import">Import</button>
+                       <button class="btn" id="btn-export">Export</button>
+                    </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <input type="file" id="image-file-input" accept="image/*" style="display: none;" multiple>
+    <input type="file" id="project-file-input" accept=".elf" style="display: none;">
+
+    <div id="template-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-button" id="close-template-modal">&times;</span>
+                Template Manager
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                     <select class="select-input" id="modal-template-select" style="margin-bottom: 10px;"></select>
+                </div>
+                <div class="form-row">
+                    <label class="control-label" for="template-name-input">N</label>
+                    <input type="text" class="text-input" id="template-name-input" placeholder="Template Name">
+                </div>
+                <div class="form-row">
+                    <div class="control-label">W</div>
+                    <input type="text" class="text-input" id="template-width-input" placeholder="Width">
+                    <div class="control-label">H</div>
+                    <input type="text" class="text-input" id="template-height-input" placeholder="Height">
+                </div>
+                <div class="form-row">
+                    <div class="control-label">C</div>
+                    <input type="text" class="text-input" id="template-corners-input" placeholder="Corner Radius">
+                </div>
+                <div class="button-row">
+                    <button class="btn btn-add" id="btn-template-add">Add/Update</button>
+                    <button class="btn btn-remove" id="btn-template-delete">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- STATE MANAGEMENT ---
+    let images = [];
+    let templates = JSON.parse(localStorage.getItem('collageTemplates')) || {};
+    let selectedImageId = null;
+    let view = { scale: 1.0, offsetX: 0, offsetY: 0 };
+
+    // --- DOM ELEMENT REFERENCES ---
+    const dom = {
+        imageListPanel: document.getElementById('image-list-panel'),
+        contentArea: document.getElementById('content-area'),
+        canvas: document.getElementById('preview-canvas'),
+        ctx: document.getElementById('preview-canvas').getContext('2d'),
+        
+        // Toolbar
+        btnRefresh: document.getElementById('btn-refresh'),
+        btnZoomOut: document.getElementById('btn-zoom-out'),
+        btnZoomIn: document.getElementById('btn-zoom-in'),
+        inputZoomLevel: document.getElementById('input-zoom-level'),
+        btnFit: document.getElementById('btn-fit'),
+        
+        // Canvas Settings
+        canvasWidth: document.getElementById('canvas-width'),
+        canvasHeight: document.getElementById('canvas-height'),
+        canvasBorder: document.getElementById('canvas-border'),
+        canvasScale: document.getElementById('canvas-scale'),
+        canvasBgColor: document.getElementById('canvas-bgcolor'),
+        
+        // Image Properties
+        imgWidth: document.getElementById('img-width'),
+        imgHeight: document.getElementById('img-height'),
+        imgX: document.getElementById('img-x'),
+        imgY: document.getElementById('img-y'),
+        imgCorners: document.getElementById('img-corners'),
+        imgLocked: document.getElementById('img-locked'),
+        btnAdd: document.getElementById('btn-add'),
+        btnRemove: document.getElementById('btn-remove'),
+        btnTemplateManager: document.getElementById('btn-template-manager'),
+        templateSelect: document.getElementById('template-select'),
+        btnApply: document.getElementById('btn-apply'),
+        
+        // File Actions
+        btnSave: document.getElementById('btn-save'),
+        btnImport: document.getElementById('btn-import'),
+        btnExport: document.getElementById('btn-export'),
+        
+        // Hidden file inputs
+        imageFileInput: document.getElementById('image-file-input'),
+        projectFileInput: document.getElementById('project-file-input'),
+
+        // Template Modal
+        templateModal: document.getElementById('template-modal'),
+        closeTemplateModal: document.getElementById('close-template-modal'),
+        modalTemplateSelect: document.getElementById('modal-template-select'),
+        templateNameInput: document.getElementById('template-name-input'),
+        templateWidthInput: document.getElementById('template-width-input'),
+        templateHeightInput: document.getElementById('template-height-input'),
+        templateCornersInput: document.getElementById('template-corners-input'),
+        btnTemplateAdd: document.getElementById('btn-template-add'),
+        btnTemplateDelete: document.getElementById('btn-template-delete')
+    };
+
+    // --- CORE LOGIC ---
+
+    const getSelectedImage = () => images.find(img => img.id === selectedImageId);
+    
+    /** Recalculates the (x, y) positions of all non-locked images. */
+    const recalcLayout = () => {
+        const collageWidth = parseInt(dom.canvasWidth.value, 10);
+        const border = parseInt(dom.canvasBorder.value, 10);
+
+        let currentX = border;
+        let currentY = border;
+        let currentRowHeight = 0;
+
+        images.forEach(entry => {
+            if (entry.locked) return; // Skip locked images
+
+            // If the current image doesn't fit in the remaining space of the row, move to the next row.
+            // Check (currentX > border) ensures the very first image of a row doesn't wrap if it's wider than the canvas.
+            if (currentX > border && (currentX + entry.target_w) > (collageWidth - border)) {
+                currentY += currentRowHeight + border;
+                currentX = border;
+                currentRowHeight = 0;
+            }
+
+            entry.x = currentX;
+            entry.y = currentY;
+            
+            currentRowHeight = Math.max(currentRowHeight, entry.target_h);
+            currentX += entry.target_w + border;
+        });
+        renderAll();
+    };
+
+    /** Renders everything: list, properties, and canvas. */
+    const renderAll = () => {
+        renderImageList();
+        renderImageProperties();
+        drawPreview();
+    };
+
+    /** Renders the list of images in the left panel. */
+    const renderImageList = () => {
+        dom.imageListPanel.innerHTML = '';
+        images.forEach(img => {
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            if (img.id === selectedImageId) {
+                item.classList.add('selected');
+            }
+            item.dataset.id = img.id;
+            const xDisplay = img.manual_x !== null ? img.manual_x : img.x;
+            const yDisplay = img.manual_y !== null ? img.manual_y : img.y;
+
+            item.innerHTML = `
+                <div class="list-item-title">${img.filename}</div>
+                <div>Original: ${img.orig_w}x${img.orig_h}</div>
+                <div>Target: ${img.target_w}x${img.target_h}</div>
+                <div>Pos: (${xDisplay}, ${yDisplay})</div>
+                <div>Locked: ${img.locked ? 'Yes' : 'No'}</div>
+            `;
+            item.addEventListener('click', () => {
+                selectedImageId = img.id;
+                renderAll();
+            });
+            dom.imageListPanel.appendChild(item);
+        });
+    };
+
+    /** Populates the right-panel inputs with the selected image's data. */
+    const renderImageProperties = () => {
+        const img = getSelectedImage();
+        if (img) {
+            dom.imgWidth.value = img.target_w;
+            dom.imgHeight.value = img.target_h;
+            dom.imgX.value = img.manual_x !== null ? img.manual_x : '';
+            dom.imgY.value = img.manual_y !== null ? img.manual_y : '';
+            dom.imgCorners.value = img.corner_radius;
+            dom.imgLocked.value = img.locked.toString();
+        } else {
+            ['imgWidth', 'imgHeight', 'imgX', 'imgY', 'imgCorners'].forEach(id => dom[id].value = '');
+            dom.imgLocked.value = "false";
+        }
+    };
+
+    /** Draws the background and all images onto a given context */
+    const performDrawing = (ctx, collageWidth, collageHeight) => {
+        // Draw collage background
+        ctx.fillStyle = dom.canvasBgColor.value;
+        ctx.fillRect(0, 0, collageWidth, collageHeight);
+
+        // Draw each image
+        for (const img of images) {
+            if (!img.htmlImage) continue;
+
+            const x = img.manual_x ?? img.x;
+            const y = img.manual_y ?? img.y;
+            
+            // Cropping logic
+            const targetAspect = img.target_w / img.target_h;
+            const origAspect = img.orig_w / img.orig_h;
+            let sx=0, sy=0, sw=img.orig_w, sh=img.orig_h;
+
+            if (targetAspect > origAspect) {
+                sh = img.orig_w / targetAspect;
+                sy = (img.orig_h - sh) / 2;
+            } else {
+                sw = img.orig_h * targetAspect;
+                sx = (img.orig_w - sw) / 2;
+            }
+
+            // Drawing with rounded corners
+            ctx.save();
+            ctx.beginPath();
+            const radius = Math.min(img.corner_radius, img.target_w / 2, img.target_h / 2);
+            ctx.moveTo(x + radius, y);
+            ctx.arcTo(x + img.target_w, y, x + img.target_w, y + img.target_h, radius);
+            ctx.arcTo(x + img.target_w, y + img.target_h, x, y + img.target_h, radius);
+            ctx.arcTo(x, y + img.target_h, x, y, radius);
+            ctx.arcTo(x, y, x + img.target_w, y, radius);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(img.htmlImage, sx, sy, sw, sh, x, y, img.target_w, img.target_h);
+            ctx.restore();
+            
+             // Draw highlight for selected image (only in preview)
+            if (ctx === dom.ctx && img.id === selectedImageId) {
+                ctx.strokeStyle = 'var(--color-highlight)';
+                ctx.lineWidth = 4 / view.scale;
+                ctx.strokeRect(x, y, img.target_w, img.target_h);
+            }
+        }
+    };
+
+    /** Main function to draw the collage preview on the canvas. */
+    const drawPreview = async (isFinalSave = false) => {
+        const collageWidth = parseInt(dom.canvasWidth.value, 10);
+        const collageHeight = parseInt(dom.canvasHeight.value, 10);
+        
+        if (isFinalSave) {
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = collageWidth;
+            finalCanvas.height = collageHeight;
+            const finalCtx = finalCanvas.getContext('2d');
+            performDrawing(finalCtx, collageWidth, collageHeight);
+            return finalCanvas;
+        }
+
+        // For preview, set canvas size and clear with outer background color
+        const { width, height } = dom.contentArea.getBoundingClientRect();
+        dom.canvas.width = width;
+        dom.canvas.height = height;
+        dom.ctx.fillStyle = getComputedStyle(dom.contentArea).backgroundColor;
+        dom.ctx.fillRect(0, 0, width, height);
+        
+        // Apply transformations and draw
+        dom.ctx.save();
+        dom.ctx.translate(dom.canvas.width / 2, dom.canvas.height / 2);
+        dom.ctx.scale(view.scale, view.scale);
+        dom.ctx.translate(-collageWidth / 2 + view.offsetX, -collageHeight / 2 + view.offsetY);
+        
+        performDrawing(dom.ctx, collageWidth, collageHeight);
+
+        dom.ctx.restore();
+    };
+    
+    const updateZoomDisplay = () => {
+        dom.inputZoomLevel.value = `${Math.round(view.scale * 100)}%`;
+    };
+
+    const loadTemplatesIntoSelects = () => {
+        const selects = [dom.templateSelect, dom.modalTemplateSelect];
+        selects.forEach(select => {
+            const currentVal = select.value;
+            select.innerHTML = '';
+            const defaultOption = select === dom.templateSelect ? 'Select...' : 'New';
+            select.innerHTML = `<option value="__new__">${defaultOption}</option>`;
+            for(const name in templates) {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            }
+            select.value = currentVal;
+        });
+    };
+    
+    const saveTemplates = () => {
+        localStorage.setItem('collageTemplates', JSON.stringify(templates));
+    };
+    
+    // --- EVENT HANDLERS ---
+    
+    const handleAddImage = (files) => {
+        for (const file of files) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const newEntry = {
+                        id: Date.now() + Math.random(),
+                        filename: file.name,
+                        orig_w: img.width,
+                        orig_h: img.height,
+                        target_w: 400,
+                        target_h: 300,
+                        x: 0, y: 0,
+                        manual_x: null, manual_y: null,
+                        locked: false,
+                        corner_radius: 0,
+                        template_tag: null,
+                        htmlImage: img,
+                        fileData: e.target.result
+                    };
+                    images.push(newEntry);
+                    if (!selectedImageId) {
+                        selectedImageId = newEntry.id;
+                    }
+                    recalcLayout();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    
+    dom.btnAdd.addEventListener('click', () => dom.imageFileInput.click());
+    dom.imageFileInput.addEventListener('change', (e) => {
+        handleAddImage(e.target.files);
+        e.target.value = ''; // Reset input
+    });
+    
+    dom.btnRemove.addEventListener('click', () => {
+        if (!selectedImageId) return alert('Select an image to remove.');
+        images = images.filter(img => img.id !== selectedImageId);
+        selectedImageId = images.length > 0 ? images[0].id : null;
+        recalcLayout();
+    });
+    
+    dom.btnApply.addEventListener('click', () => {
+        const img = getSelectedImage();
+        if (!img) return alert('Select an image to apply changes to.');
+        
+        img.target_w = parseInt(dom.imgWidth.value, 10) || img.target_w;
+        img.target_h = parseInt(dom.imgHeight.value, 10) || img.target_h;
+        img.corner_radius = parseInt(dom.imgCorners.value, 10) || 0;
+        
+        const manualX = dom.imgX.value.trim();
+        const manualY = dom.imgY.value.trim();
+        img.manual_x = manualX !== '' ? parseInt(manualX, 10) : null;
+        img.manual_y = manualY !== '' ? parseInt(manualY, 10) : null;
+        
+        // If manual position is set, or locked is explicitly true, then lock.
+        img.locked = dom.imgLocked.value === 'true' || (img.manual_x !== null || img.manual_y !== null);
+
+        recalcLayout();
+    });
+
+    dom.templateSelect.addEventListener('change', (e) => {
+        const templateName = e.target.value;
+        const template = templates[templateName];
+        const img = getSelectedImage();
+        if (template && img) {
+            dom.imgWidth.value = template.width;
+            dom.imgHeight.value = template.height;
+            dom.imgCorners.value = template.corner_radius;
+            img.template_tag = templateName;
+            // Apply immediately
+            dom.btnApply.click();
+        }
+    });
+
+    // Canvas Settings Listeners
+    ['canvasWidth', 'canvasHeight', 'canvasBorder', 'canvasBgColor'].forEach(id => {
+        dom[id].addEventListener('input', recalcLayout);
+    });
+    dom.canvasScale.addEventListener('change', () => {
+        const factor = parseFloat(dom.canvasScale.value);
+        if (isNaN(factor) || factor <= 0) return;
+        dom.canvasWidth.value = Math.round(parseInt(dom.canvasWidth.value) * factor);
+        dom.canvasHeight.value = Math.round(parseInt(dom.canvasHeight.value) * factor);
+        recalcLayout();
+    });
+    
+    // Zoom/Pan Listeners
+    dom.btnZoomIn.addEventListener('click', () => {
+        view.scale *= 1.2;
+        updateZoomDisplay();
+        drawPreview();
+    });
+    dom.btnZoomOut.addEventListener('click', () => {
+        view.scale /= 1.2;
+        updateZoomDisplay();
+        drawPreview();
+    });
+    dom.btnFit.addEventListener('click', () => {
+        const cw = parseInt(dom.canvasWidth.value);
+        const ch = parseInt(dom.canvasHeight.value);
+        const { width: areaW, height: areaH } = dom.contentArea.getBoundingClientRect();
+        if (cw <= 0 || ch <= 0) return;
+        
+        view.scale = Math.min((areaW - 20) / cw, (areaH - 20) / ch);
+        view.offsetX = 0;
+        view.offsetY = 0;
+        updateZoomDisplay();
+        drawPreview();
+    });
+    dom.btnRefresh.addEventListener('click', drawPreview);
+
+    // --- Template Manager Modal Handlers ---
+    const resetModalInputs = () => {
+        dom.templateNameInput.value = '';
+        dom.templateNameInput.placeholder = 'New Template Name';
+        dom.templateWidthInput.value = '';
+        dom.templateHeightInput.value = '';
+        dom.templateCornersInput.value = '';
+    }
+
+    dom.btnTemplateManager.addEventListener('click', () => {
+        loadTemplatesIntoSelects();
+        resetModalInputs();
+        dom.modalTemplateSelect.value = '__new__';
+        dom.templateModal.style.display = 'flex'; // Show modal
+    });
+    dom.closeTemplateModal.addEventListener('click', () => dom.templateModal.style.display = 'none');
+    
+    dom.modalTemplateSelect.addEventListener('change', (e) => {
+        const templateName = e.target.value;
+        if (templateName === '__new__') {
+            resetModalInputs();
+        } else {
+            const t = templates[templateName];
+            if (t) {
+                dom.templateNameInput.value = templateName;
+                dom.templateWidthInput.value = t.width;
+                dom.templateHeightInput.value = t.height;
+                dom.templateCornersInput.value = t.corner_radius;
+            }
+        }
+    });
+
+    dom.btnTemplateAdd.addEventListener('click', () => {
+        const name = dom.templateNameInput.value.trim();
+        const width = parseInt(dom.templateWidthInput.value, 10);
+        const height = parseInt(dom.templateHeightInput.value, 10);
+        const corners = parseInt(dom.templateCornersInput.value, 10);
+
+        if (!name) return alert("Template name cannot be empty.");
+        if (isNaN(width) || isNaN(height) || isNaN(corners)) return alert("W, H, and C must be numbers.");
+
+        templates[name] = { width, height, corner_radius: corners };
+        saveTemplates();
+        loadTemplatesIntoSelects();
+        alert(`Template "${name}" added/updated.`);
+        dom.templateModal.style.display = 'none';
+    });
+
+    dom.btnTemplateDelete.addEventListener('click', () => {
+        const name = dom.templateNameInput.value.trim();
+        if (!name) return alert("Select a template or enter a name to delete.");
+        if (templates[name]) {
+            if (confirm(`Delete template "${name}"?`)) {
+                delete templates[name];
+                saveTemplates();
+                loadTemplatesIntoSelects();
+                alert(`Template "${name}" deleted.`);
+                dom.templateModal.style.display = 'none';
+            }
+        } else {
+            alert(`Template "${name}" not found.`);
+        }
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === dom.templateModal) dom.templateModal.style.display = 'none';
+    });
+    
+    // --- File IO, Canvas Interaction, and Initialization ---
+
+    // (This section is unchanged from the previous version as it was already correct)
+
+    // Save/Import/Export
+    dom.btnSave.addEventListener('click', async () => {
+        const finalCanvas = await drawPreview(true);
+        const link = document.createElement('a');
+        link.download = 'collage.png';
+        link.href = finalCanvas.toDataURL('image/png');
+        link.click();
+    });
+
+    dom.btnExport.addEventListener('click', () => {
+        const projectData = {
+            canvas_settings: {
+                width: dom.canvasWidth.value,
+                height: dom.canvasHeight.value,
+                border: dom.canvasBorder.value,
+                bg_color: dom.canvasBgColor.value
+            },
+            images: images.map(img => ({
+                id: img.id, filename: img.filename, orig_w: img.orig_w, orig_h: img.orig_h,
+                target_w: img.target_w, target_h: img.target_h, x: img.x, y: img.y,
+                manual_x: img.manual_x, manual_y: img.manual_y, locked: img.locked,
+                corner_radius: img.corner_radius, template_tag: img.template_tag,
+                fileData: img.fileData.split(',')[1]
+            }))
+        };
+        const jsonStr = JSON.stringify(projectData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'project.elf';
+        link.click();
+        URL.revokeObjectURL(url);
+    });
+
+    dom.btnImport.addEventListener('click', () => dom.projectFileInput.click());
+    dom.projectFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const projectData = JSON.parse(event.target.result);
+                const cs = projectData.canvas_settings;
+                dom.canvasWidth.value = cs.width;
+                dom.canvasHeight.value = cs.height;
+                dom.canvasBorder.value = cs.border;
+                dom.canvasBgColor.value = cs.bg_color;
+
+                images = [];
+                selectedImageId = null;
+                const imagePromises = projectData.images.map(imgInfo => {
+                    return new Promise((resolve) => {
+                         const fullDataUrl = `data:image/png;base64,${imgInfo.fileData}`;
+                         const img = new Image();
+                         img.onload = () => {
+                            imgInfo.htmlImage = img;
+                            imgInfo.fileData = fullDataUrl;
+                            images.push(imgInfo);
+                            resolve();
+                         }
+                         img.onerror = () => { resolve(); }
+                         img.src = fullDataUrl;
+                    });
+                });
+                
+                Promise.all(imagePromises).then(() => {
+                    if (images.length > 0) selectedImageId = images[0].id;
+                    recalcLayout();
+                });
+            } catch (err) {
+                alert('Failed to import project file.');
+                console.error(err);
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    });
+    
+    // Canvas interaction (Pan & Zoom)
+    let isDragging = false;
+    let lastMousePos = { x: 0, y: 0 };
+    dom.canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        lastMousePos = { x: e.clientX, y: e.clientY };
+    });
+    dom.canvas.addEventListener('mouseup', () => { isDragging = false; });
+    dom.canvas.addEventListener('mouseleave', () => { isDragging = false; });
+    dom.canvas.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - lastMousePos.x;
+        const dy = e.clientY - lastMousePos.y;
+        lastMousePos = { x: e.clientX, y: e.clientY };
+        view.offsetX += dx / view.scale;
+        view.offsetY += dy / view.scale;
+        drawPreview();
+    });
+    dom.canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomIntensity = 0.1;
+        const wheel = e.deltaY < 0 ? 1 : -1;
+        const zoom = Math.exp(wheel * zoomIntensity);
+        view.scale *= zoom;
+        updateZoomDisplay();
+        drawPreview();
+    });
+
+    // Canvas click for image selection
+    dom.canvas.addEventListener('click', (e) => {
+        if (Math.abs(e.clientX - lastMousePos.x) > 3 || Math.abs(e.clientY - lastMousePos.y) > 3) return;
+
+        const rect = dom.canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        const collageWidth = parseInt(dom.canvasWidth.value, 10);
+        const { width: areaW, height: areaH } = dom.contentArea.getBoundingClientRect();
+        
+        const collageX = (clickX - areaW / 2) / view.scale + collageWidth / 2 - view.offsetX;
+        const collageY = (clickY - areaH / 2) / view.scale + collageWidth / 2 - view.offsetY;
+        
+        let found = null;
+        for (let i = images.length - 1; i >= 0; i--) { 
+            const img = images[i];
+            const x = img.manual_x ?? img.x;
+            const y = img.manual_y ?? img.y;
+            if (collageX >= x && collageX <= x + img.target_w && collageY >= y && collageY <= y + img.target_h) {
+                found = img;
+                break;
+            }
+        }
+
+        if (found) {
+            selectedImageId = found.id;
+            renderAll();
+        }
+    });
+
+    // --- INITIALIZATION ---
+    new ResizeObserver(recalcLayout).observe(dom.contentArea);
+    loadTemplatesIntoSelects();
+    recalcLayout();
+});
+</script>
+
+</body>
+</html>
