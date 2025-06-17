@@ -19,7 +19,7 @@ Some of the functionalities are quite barebones like zooming which feels really 
 
 ![Showcase.png](https://github.com/masterelf425900/Tiles-Tapestry/blob/main/Images/Showcase.png)
 
-Final Output with more changes, refining and cropping.
+Final Output image.
 
 ![Cosmic Collage.png](https://github.com/masterelf425900/Tiles-Tapestry/blob/main/Images/Cosmic%20Collage.png)
 
