@@ -32,7 +32,7 @@ Final Output image.
 2. type "python Collage-V5.py"
 
 > [!Note]
-> Older scripts are file formats are not compatible with the new html version. They are also janky, slow and kind of ugly but im still making them available to see the evolution of it bit by bit.
+> Older scripts' file formats are not compatible with the new html version. They are also janky, slow and kind of ugly but im still making them available to see the evolution of it bit by bit.
 
 ## Disclaimer!
 
